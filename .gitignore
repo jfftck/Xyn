@@ -20,3 +20,5 @@ gopath/
 
 # Go workspace file
 go.work
+
+generated-icon.png
