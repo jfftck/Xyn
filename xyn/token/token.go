@@ -14,16 +14,38 @@ const (
 	// Identifiers and literals
 	IDENT
 	INT
+	LONG
+	FLOAT
+	DECIMAL // Special base 10 number, it is slower than all base 2 numbers
 	STRING
+	TEMPLATE_STRING
+	CHAR
+	BYTE
+	BOOL
 
 	// Operators
 	ASSIGN
 	PLUS
 	MINUS
-	BANG
 	ASTERISK
 	SLASH
 	BACKSLASH
+	TILDE
+
+	// Sybols
+	BANG
+	QUESTION
+	DOT
+	AT
+	DOLLAR
+	PERCENT
+	AMPERSAND
+	QUOTE
+	UNDERSCORE
+	PIPE
+	CARET
+	DOUBLE_QUOTE
+	BACK_QUOTE
 	HASH
 	REASSIGN
 
@@ -77,7 +99,14 @@ var typeNames = map[TokenType]string {
     EOF: "EOF",
     IDENT: "IDENT",
     INT: "INT",
-    STRING: "STRING",
+	LONG: "LONG",
+	FLOAT: "FLOAT",
+	DECIMAL: "DECIMAL",
+	STRING: "STRING",
+	TEMPLATE_STRING: "TEMPLATE_STRING",
+	CHAR: "CHAR",
+	BYTE: "BYTE",
+	BOOL: "BOOL",
     ASSIGN: "ASSIGN",
     PLUS: "PLUS",
     MINUS: "MINUS",
@@ -120,6 +149,19 @@ var typeNames = map[TokenType]string {
     RIGHT_SIGNAL: "RIGHT_SIGNAL",
     BIDIRECTIONAL_SIGNAL: "BIDIRECTIONAL_SIGNAL",
     ASSIGN_SIGNAL: "ASSIGN_SIGNAL",
+	QUESTION: "QUESTION",
+	DOT: "DOT",
+	AT: "AT",
+	DOLLAR: "DOLLAR",
+	PERCENT: "PERCENT",
+	AMPERSAND: "AMPERSAND",
+	QUOTE: "QUOTE",
+	UNDERSCORE: "UNDERSCORE",
+	PIPE: "PIPE",
+	CARET: "CARET",
+	DOUBLE_QUOTE: "DOUBLE_QUOTE",
+	BACK_QUOTE: "BACK_QUOTE",
+	TILDE: "TILDE",
 }
 
 var keywords = map[string]TokenType{
