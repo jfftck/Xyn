@@ -14,6 +14,7 @@ func TestNextToken(t *testing.T) {
 		}
 
 		result := add(five, ten);
+		<- -> <:= - < > = == [ ] | \ / * % $ # @ ! " ' & ^ ~
 		`
 
 	tests := []struct {
@@ -51,6 +52,30 @@ func TestNextToken(t *testing.T) {
 		{token.IDENT, "ten"},
 		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
+		{token.LEFT_SIGNAL, "<-"},
+		{token.RIGHT_SIGNAL, "->"},
+		{token.ASSIGN_SIGNAL, "<:="},
+		{token.MINUS, "-"},
+		{token.LESS, "<"},
+		{token.GREATER, ">"},
+		{token.REASSIGN, "="},
+		{token.EQUAL, "=="},
+		{token.LBRACKET, "["},
+		{token.RBRACKET, "]"},
+		{token.PIPE, "|"},
+		{token.BACKSLASH, "\\"},
+		{token.SLASH, "/"},
+		{token.ASTERISK, "*"},
+		{token.PERCENT, "%"},
+		{token.DOLLAR, "$"},
+		{token.HASH, "#"},
+		{token.AT, "@"},
+		{token.BANG, "!"},
+		{token.DOUBLE_QUOTE, "\""},
+		{token.QUOTE, "'"},
+		{token.AMPERSAND, "&"},
+		{token.CARET, "^"},
+		{token.TILDE, "~"},
 	}
 
 	l := New(input)

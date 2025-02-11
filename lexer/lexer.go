@@ -136,6 +136,36 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.LBRACE, string(l.rn))
 	case '}':
 		tok = l.newToken(token.RBRACE, string(l.rn))
+	case '[':
+		tok = l.newToken(token.LBRACKET, string(l.rn))
+	case ']':
+		tok = l.newToken(token.RBRACKET, string(l.rn))
+	case '|':
+		tok = l.newToken(token.PIPE, string(l.rn))
+	case '"':
+		tok = l.newToken(token.DOUBLE_QUOTE, string(l.rn))
+	case '\'':
+		tok = l.newToken(token.QUOTE, string(l.rn))
+	case '&':
+		tok = l.newToken(token.AMPERSAND, string(l.rn))
+	case '^':
+		tok = l.newToken(token.CARET, string(l.rn))
+	case '~':
+		tok = l.newToken(token.TILDE, string(l.rn))
+	case '%':
+		tok = l.newToken(token.PERCENT, string(l.rn))
+	case '$':
+		tok = l.newToken(token.DOLLAR, string(l.rn))
+	case '#':
+		tok = l.newToken(token.HASH, string(l.rn))
+	case '@':
+		tok = l.newToken(token.AT, string(l.rn))
+	case '`':
+		tok = l.newToken(token.BACK_QUOTE, string(l.rn))
+	case '?':
+		tok = l.newToken(token.QUESTION, string(l.rn))
+	case '\\':
+		tok = l.newToken(token.BACKSLASH, string(l.rn))
 	case 0:
 		tok = l.newToken(token.EOF, "")
 	default:
@@ -177,7 +207,7 @@ func (l *Lexer) newToken(t token.TokenType, lit string) token.Token {
 
 func (l *Lexer) readIdentifier() token.Token {
 	pos := l.pos
-	for isLetter(l.rn) {
+	for isLetter(l.rn) || isDigit(l.rn) {
 		l.readRune()
 	}
 
