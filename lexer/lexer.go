@@ -17,6 +17,7 @@ func New(input string) *Lexer {
 
 	return l
 }
+
 func (l *Lexer) readRune() {
 	l.rn = l.peekRune()
 	l.pos = l.readPos
