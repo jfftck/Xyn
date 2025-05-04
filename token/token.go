@@ -92,6 +92,12 @@ const (
 	RIGHT_SIGNAL
 	BIDIRECTIONAL_SIGNAL
 	ASSIGN_SIGNAL // <:= (Squid)
+
+	// Ownership modifiers
+	SHARED  // Reference counted
+	MOVE    // Transfer ownership
+	COPY    // Create independent copy
+	BORROW  // Temporary reference
 )
 
 var typeNames = map[TokenType]string {
@@ -162,6 +168,10 @@ var typeNames = map[TokenType]string {
 	DOUBLE_QUOTE: "DOUBLE_QUOTE",
 	BACK_QUOTE: "BACK_QUOTE",
 	TILDE: "TILDE",
+	SHARED: "SHARED",
+	MOVE: "MOVE",
+	COPY: "COPY",
+	BORROW: "BORROW",
 }
 
 var keywords = map[string]TokenType{
@@ -174,6 +184,10 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"shared": SHARED,
+	"move":   MOVE, 
+	"copy":   COPY,
+	"borrow": BORROW,
 }
 
 func LookupIdent(ident string) TokenType {
