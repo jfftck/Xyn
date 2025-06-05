@@ -160,13 +160,19 @@ func (l *Lexer) NextToken() token.Token {
 	case '#':
 		tok = l.newToken(token.HASH, string(l.rn))
 	case '@':
-		tok = l.newToken(token.AT, string(l.rn))
+		if isLetter(l.peekRune()) {
+			tok = l.readSpecialIdentifier()
+		} else {
+			tok = l.newToken(token.AT, string(l.rn))
+		}
 	case '`':
 		tok = l.newToken(token.BACK_QUOTE, string(l.rn))
 	case '?':
 		tok = l.newToken(token.QUESTION, string(l.rn))
 	case '\\':
 		tok = l.newToken(token.BACKSLASH, string(l.rn))
+	case '.':
+		tok = l.newToken(token.DOT, string(l.rn))
 	case 0:
 		tok = l.newToken(token.EOF, "")
 	default:
@@ -207,7 +213,11 @@ func (l *Lexer) newToken(t token.TokenType, lit string) token.Token {
 }
 
 func (l *Lexer) readIdentifier() token.Token {
-	pos := l.pos
+	return l.readIdentifierWithOffset(0)
+}
+
+func (l *Lexer) readIdentifierWithOffset(offset int) token.Token {
+	pos := l.pos + offset
 	for isLetter(l.rn) || isDigit(l.rn) {
 		l.readRune()
 	}
@@ -215,6 +225,16 @@ func (l *Lexer) readIdentifier() token.Token {
 	id := token.LookupIdent(string(l.input[pos:l.pos]))
 
 	return l.newToken(id, string(l.input[pos:l.pos]))
+}
+
+func (l *Lexer) readSpecialIdentifier() token.Token {
+	if len(l.input) < 2 {
+		return l.newToken(token.ILLEGAL, string(l.input[l.pos:l.pos+1]))
+	}
+
+	l.readRune()
+
+	return l.readIdentifierWithOffset(-1)
 }
 
 func (l *Lexer) readNumber() token.Token {

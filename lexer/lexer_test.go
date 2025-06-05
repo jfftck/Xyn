@@ -14,7 +14,10 @@ func TestNextToken(t *testing.T) {
 		}
 
 		result := add(five, ten);
-		<- -> <:= - < > = == [ ] | \ / * % $ # @ ! " ' & ^ ~
+		<- -> <:= - < > = == != [ ] | \ / * % $ # @ ! " ' & ^ ~
+
+		shared move copy borrow
+		fn as in where true false if else return
 		`
 
 	tests := []struct {
@@ -60,6 +63,7 @@ func TestNextToken(t *testing.T) {
 		{token.GREATER, ">"},
 		{token.REASSIGN, "="},
 		{token.EQUAL, "=="},
+		{token.NOT_EQUAL, "!="},
 		{token.LBRACKET, "["},
 		{token.RBRACKET, "]"},
 		{token.PIPE, "|"},
@@ -76,6 +80,20 @@ func TestNextToken(t *testing.T) {
 		{token.AMPERSAND, "&"},
 		{token.CARET, "^"},
 		{token.TILDE, "~"},
+		{token.SHARED, "shared"},
+		{token.MOVE, "move"},
+		{token.COPY, "copy"},
+		{token.BORROW, "borrow"},
+		{token.FUNCTION, "fn"},
+		{token.AS, "as"},
+		{token.IN, "in"},
+		{token.WHERE, "where"},
+		{token.TRUE, "true"},
+		{token.FALSE, "false"},
+		{token.IF, "if"},
+		{token.ELSE, "else"},
+		{token.RETURN, "return"},
+		{token.EOF, ""},
 	}
 
 	l := New(input)
