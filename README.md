@@ -34,13 +34,14 @@ Xyn
 Below is an example of a server application written in Xyn:
 
 ```xyn
-{ httpServer } <StatusCode> := import @std.http;
-{ consoleLogger, fileLogger, multiLogger } <Info, Debug, Warn, Error, Panic> := import @std.logger;
-{ argsParser, cpu } <Args> := import @std.os;
+{ httpServer } <StatusCode, Get, Post, Put, Delete> := @import @std.http;
+{ consoleLogger, fileLogger, multiLogger } <Info, Debug, Warn, Error, Panic, ConsoleLogger, FileLogger> := @import @std.logger;
+{ argsParser, cpu } <Args, CORE_TYPE> := @import @std.os;
 
-{ createPost, deletePost, getPost, getPosts, updatePost } := import p`./routes`;
+{ createPost, deletePost, getPost, getPosts, updatePost } := @import @p`./routes`;
+{ handleAuth } := @import @p`./auth`;
 
-export enum Status {
+@export type enum Status {
 	Init,
 	Starting,
 	Running,
@@ -48,56 +49,69 @@ export enum Status {
 	Stopped,
 }
 
-export struct AppUpdates {
-	Status status,
+@export type struct AppUpdates {
+	<Status> status,
 }
 
-const DEFAULT_PORT = 8080;
+public const DEFAULT_PORT = 8080;
 
-@log = multiLogger.new -> match! {
-	<Info | Debug | Warn | Error | Panic> ex => ex -> consoleLogger.newOrLog,
-	<Warn | Error | Panic> ex => ex -> fileLogger.newOrLog
+@log(@@multiLogger.new<ConsoleLogger | FileLogger>) -> match! {
+	(<ConsoleLogger>, <Info | Debug | Warn | Error | Panic>) ex => ex -> consoleLogger.newOrLog,
+	(<FileLogger>, <Warn | Error | Panic>) ex => ex -> fileLogger.newOrLog
 }
 
-@main = @@cpu.useFirstCore fn(<Args> args)
+@main(@@cpu.useFreeCore(coreType = .eCore) as #mainCore) fn(<Args> args)
 		[argsParser, httpServer, createPost, deletePost, getPost, getPosts, updatePost] {
 	options? <:= argsParser(args) -> match! {
-		port: (“port” | “p”) as userPort => userPort
+		(<str> “port” | “p”, <int> userPort) => :{ port: userPort }
 	}
 
 	<Status?> currentStatus?;
-	currentStatus?.@signal = fn!(<AppUpdates> payload) <Status?> {
-		status := (currentStatus?, payload.status) match {
-			(Init, Starting) => Starting,
-			(Starting, Running) => Running,
-			(Running, Stopping) => Stopping,
-			(Stopping, Stopped) => Stopped,
-			_ => currentStatus? else Init
+	@signal(<Status?> status?) fn!(<AppUpdates> payload) <Status> {
+		newStatus := match (status?, payload.status) {
+			(.Init, .Starting) => .Starting,
+			(.Starting, .Running) => .Running,
+			(.Running, .Stopping) => .Stopping,
+			(.Stopping, .Stopped) => .Stopped,
+			_ => status? else .Init
 		}
 
-		return status where != payload.status;
+		yeild newStatus where != payload.status;
 	}
-
-	app := httpServer.createPool(cpu.threads() * cpu.cores() / 2, excludedCores=[cpu.firstCore]);
-
-	app.staticRoute("/") <-> app.render(p`./static`);
-
-	api := app.group(p`api`);
-	v1 := api.group(p`v1`);
-
-	v1.router(p`posts/`) <-> match! {
-		app.get() => getPosts(),
-		app.get(p`${id}`).pre(auth) => getPost(id),
-		app.post().pre(auth) as req => createPost(req.body),
-		app.put(p`${id}`).pre(auth) as req => updatePost(id, req.body),
-		app.delete(p`${id}`).pre(auth) => deletePost(id),
-		_ => app.apiError(“Invalid access to posts”),
-	}
-
-	for app.run(options?.port else DEFAULT_PORT) -> fn!(<StatusCode> ex) { @log error(`Failed to load page: ${ex.message}`); } {
-		currentStatus? -> fn!(<Status> status) {
-			print(str(status));
+	@set(<Status?> status?) fn(<Status> newStatus) {
+		status? <- fn![newStatus] <AppUpdates> {
+			return @new<AppUpdate>() { status = newStatus };
 		}
+	}
+
+	currentStatus? -> fn!(<Status> status) {
+		print(<str(status)>);
+	}
+
+	currentStatus? = .Init;
+	app := httpServer.createPool(cpu.threads() * cpu.cores() // 2, excludedCores=[#mainCore]);
+
+	app.staticRoute("/", @p`./static`);
+
+	api := app.group(@p`api/`);
+	v1 := api.group(@p`v1/`);
+
+	v1.route<Get | Post | Put | Delete>(@p`posts/<str?>`) <-> match! {
+		(<Get>, '') => getPosts(),
+		(<Get>, <str> id) => getPost(id),
+		(<Post>, '') as req where && handleAuth(req) => createPost(req.body),
+		(<Put>, <str> id) as req where && handleAuth(req) => updatePost(id, req.body),
+		(<Delete>, <str> id) as req where && handleAuth(req) => deletePost(id),
+		_ => app.httpError(“Invalid access to posts”),
+	}
+
+	currentStatus? = .Starting;
+	app.run(options?.port else DEFAULT_PORT) -> fn!(<StatusCode> ex) { @log error(`Failed to load page: ${ex.message}`); }
+
+	currentStatus? = .Running;
+
+	while currentStatus? == .Running {
+
 	}
 }
 ```
