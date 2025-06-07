@@ -41,6 +41,18 @@
         {
           "name": "comment.line.number-sign.xyn",
           "match": "#.*$"
+        },
+        {
+          "name": "comment.block.xyn",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": [
+            {
+              "name": "comment.block.nested.xyn",
+              "begin": "/\\*",
+              "end": "\\*/"
+            }
+          ]
         }
       ]
     },
