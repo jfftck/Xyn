@@ -19,9 +19,17 @@ Xyn does not support null values. Instead, variables can be declared as "maybe" 
 
 Example:
 ```xyn
-<string> page? // Declares a maybe value, it requires a type to be given
-page? else "defaultPage" // Accesses the value with a fallback
-page? = ? // Set the state of the maybe to unset, this will clear any value
+mut <string?> page?; # Declares a mutable maybe value, it requires a type to be given
+page? else "defaultPage"; # Accesses the value with a fallback
+page? = ?; # Set the state of the maybe to unset, this will clear any value
+
+<int?> index?; # Declares an immutable maybe value, it starts as a None type
+index? = 1; # You can set the value only once
+index? = ?; # This will always panic, since it isn't allowed to remain unset and can't be unset after being set
+index? else 0; # You can still have a fallback value
+
+<int? = 0> section?; # This will automatically have a fallback default value if not set
+section? = 5; # This immutable value will now be set and will not use the default value, this value can't be changed after this
 ```
 
 ### 3. **Errors as Values**
