@@ -41,66 +41,64 @@ Below is an example of a server application written in Xyn:
 { createPost, deletePost, getPost, getPosts, updatePost } := import p`./routes`;
 
 export enum Status {
-    Init,
-    Starting,
-    Running,
-    Stopping,
-    Stopped,
+	Init,
+	Starting,
+	Running,
+	Stopping,
+	Stopped,
 }
 
 export struct AppUpdates {
-    Status status,
+	Status status,
 }
 
 const DEFAULT_PORT = 8080;
 
 @log = multiLogger.new -> match! {
-    <Info | Debug | Warn | Error | Panic> ex => ex -> consoleLogger.newOrLog,
-    <Warn | Error | Panic> ex => ex -> fileLogger.newOrLog
+	<Info | Debug | Warn | Error | Panic> ex => ex -> consoleLogger.newOrLog,
+	<Warn | Error | Panic> ex => ex -> fileLogger.newOrLog
 }
 
 @main = @@cpu.useFirstCore fn(<Args> args)
-        [argsParser, httpServer, createPost, deletePost, getPost, getPosts, updatePost] {
-    options? <:= argsParser(args) -> match! {
-        port: (“port” | “p”) as userPort => userPort
-    }
+		[argsParser, httpServer, createPost, deletePost, getPost, getPosts, updatePost] {
+	options? <:= argsParser(args) -> match! {
+		port: (“port” | “p”) as userPort => userPort
+	}
 
-    <Status> currentStatus?;
-    currentStatus?.@signal = fn!(<AppUpdates> payload) <Status> {
-        status := (currentStatus?, payload.status) match {
-            (Init, Starting) => Starting,
-            (Starting, Running) => Running,
-            (Running, Stopping) => Stopping,
-            (Stopping, Stopped) => Stopped,
-            _ => currentStatus? else Init
-        }
+	<Status?> currentStatus?;
+	currentStatus?.@signal = fn!(<AppUpdates> payload) <Status?> {
+		status := (currentStatus?, payload.status) match {
+			(Init, Starting) => Starting,
+			(Starting, Running) => Running,
+			(Running, Stopping) => Stopping,
+			(Stopping, Stopped) => Stopped,
+			_ => currentStatus? else Init
+		}
 
-        return status where != payload.status;
-    }
+		return status where != payload.status;
+	}
 
-    app := httpServer.createPool(cpu.threads() * cpu.cores() / 2, excludedCores=[cpu.firstCore]);
+	app := httpServer.createPool(cpu.threads() * cpu.cores() / 2, excludedCores=[cpu.firstCore]);
 
-    app.staticRoute("/") <-> app.render(p`./static`);
+	app.staticRoute("/") <-> app.render(p`./static`);
 
-    api := app.group(p`api`);
-    v1 := api.group(p`v1`);
+	api := app.group(p`api`);
+	v1 := api.group(p`v1`);
 
-    v1.router(p`posts/`) <-> match! {
-        app.get() => getPosts(),
-        app.get(p`${id}`).pre(auth) => getPost(id),
-        app.post().pre(auth) as req => createPost(req.body),
-        app.put(p`${id}`).pre(auth) as req => updatePost(id, req.body),
-        app.delete(p`${id}`).pre(auth) => deletePost(id),
-        _ => app.apiError(“Invalid access to posts”),
-    }
+	v1.router(p`posts/`) <-> match! {
+		app.get() => getPosts(),
+		app.get(p`${id}`).pre(auth) => getPost(id),
+		app.post().pre(auth) as req => createPost(req.body),
+		app.put(p`${id}`).pre(auth) as req => updatePost(id, req.body),
+		app.delete(p`${id}`).pre(auth) => deletePost(id),
+		_ => app.apiError(“Invalid access to posts”),
+	}
 
-    for app.run(options?.port else DEFAULT_PORT) -> fn!(<StatusCode> ex) { 
-        @log error(`Failed to load page: ${ex.message}`); 
-    } {
-        currentStatus? -> fn!(<Status> status) {
-            print(str(status));
-        }
-    }
+	for app.run(options?.port else DEFAULT_PORT) -> fn!(<StatusCode> ex) { @log error(`Failed to load page: ${ex.message}`); } {
+		currentStatus? -> fn!(<Status> status) {
+			print(str(status));
+		}
+	}
 }
 ```
 
